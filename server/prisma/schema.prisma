@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Swap provider to "postgresql" and update DATABASE_URL for Postgres later.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TeamType {
+  CLUB
+  COUNTRY
+}
+
+enum MatchType {
+  CLUB
+  COUNTRY
+}
+
+enum Position {
+  GK
+  DEF
+  MID
+  FWD
+}
+
+model Team {
+  id             String   @id @default(cuid())
+  name           String
+  type           TeamType
+  country        String
+  league         String?
+  logoUrl        String?
+  fifaRank       Int?
+  confederation  String?
+  externalId     String?  @unique
+  dataSource     String?
+  createdAt      DateTime @default(now())
+
+  players        Player[]
+  homeMatches    Match[]      @relation("HomeTeam")
+  awayMatches    Match[]      @relation("AwayTeam")
+  seasonStats    SeasonStats?
+}
+
+model Player {
+  id            String   @id @default(cuid())
+  name          String
+  teamId        String
+  position      Position
+  /// Fine-grained pitch role from EA FC when known (ST, LW, CB, CDM, …)
+  preferredRole String?
+  age           Int
+  nationality   String
+  externalId    String?  @unique
+  fifaRank      Int?
+  createdAt     DateTime @default(now())
+
+  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  abilities PlayerAbilities?
+  goals     MatchEvent[]
+}
+
+model PlayerAbilities {
+  id            String @id @default(cuid())
+  playerId      String @unique
+  pace          Int
+  shooting      Int
+  passing       Int
+  dribbling     Int
+  defending     Int
+  physical      Int
+  overallRating Int
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model Match {
+  id          String    @id @default(cuid())
+  homeTeamId  String
+  awayTeamId  String
+  homeScore   Int
+  awayScore   Int
+  date        DateTime
+  competition String
+  matchType   MatchType
+  externalId  String?   @unique
+  createdAt   DateTime  @default(now())
+
+  homeTeam Team         @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeam Team         @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  events   MatchEvent[]
+}
+
+model MatchEvent {
+  id       String @id @default(cuid())
+  matchId  String
+  playerId String
+  goals    Int    @default(1)
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model SeasonStats {
+  id             String @id @default(cuid())
+  teamId         String @unique
+  wins           Int    @default(0)
+  losses         Int    @default(0)
+  draws          Int    @default(0)
+  goalsFor       Int    @default(0)
+  goalsAgainst   Int    @default(0)
+  goalDifference Int    @default(0)
+  winPercentage  Float  @default(0)
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}

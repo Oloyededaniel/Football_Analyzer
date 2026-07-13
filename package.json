@@ -1,0 +1,22 @@
+{
+  "name": "football-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run build -w server",
+    "db:push": "npm run db:push -w server",
+    "db:generate": "npm run db:generate -w server",
+    "seed": "npm run seed -w server",
+    "sync:real": "npm run sync:real -w server",
+    "setup": "npm install && npm run db:generate && npm run db:push && npm run sync:real",
+    "setup:mock": "npm install && npm run db:generate && npm run db:push && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
