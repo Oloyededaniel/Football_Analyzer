@@ -8,7 +8,8 @@ services:
     plan: free
     region: oregon
     rootDir: .
-    buildCommand: npm install && npm run db:generate && npm run build && npm run db:push && npm run sync:real
+    # --include=dev so Vite/TypeScript install even when NODE_ENV=production
+    buildCommand: npm install --include=dev && npm run db:generate && npm run build && npm run db:push && npm run sync:real
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
